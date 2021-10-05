@@ -42,11 +42,8 @@ class CityController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make( $request->all(), [
-            'name' => 'required',
-            'state' => 'required',
-            'postcode' => 'required'
-        ]);
+        // Validate the request
+        $validator = $this->formValidator( $request );
 
         if( $validator->fails() ){
             return redirect()->route( 'admin/cities/create' )
@@ -55,11 +52,9 @@ class CityController extends Controller
                         ->with( 'danger', 'City could not be created.' );
         }
 
+        // Create the city
         $city = new City;
-        $city->name = $request->name;
-        $city->state = $request->state;
-        $city->postcode = $request->postcode;
-        $city->save();
+        $this->save( $city, $request );
 
         return redirect()->route( 'cities.index' )->with( 'success', 'New city created.' );
     }
@@ -101,11 +96,8 @@ class CityController extends Controller
      */
     public function update( Request $request, $id )
     {
-        $validator = Validator::make( $request->all(), [
-            'name' => 'required',
-            'state' => 'required',
-            'postcode' => 'required'
-        ]);
+        // Validate the request
+        $validator =$this->formValidator( $request );
 
         if( $validator->fails() ){
             return redirect()->route( 'cities.edit', $id )
@@ -114,11 +106,9 @@ class CityController extends Controller
                             ->with( 'danger', 'City could not be updated.' );
         }
 
+        // Find and save the city
         $city = City::findOrFail( $id );
-        $city->name = $request->input('name');
-        $city->state = $request->input('state');
-        $city->postcode = $request->input('postcode');
-        $city->save();
+        $this->save( $city, $request );
 
         return redirect()->route( 'cities.show', [
             'city' => $city
@@ -142,5 +132,20 @@ class CityController extends Controller
         Job::where( 'city_id', $id )->update( [ 'city_id' => null ] );
 
         return redirect()->route( 'cities.index' )->with( 'info', 'City deleted.' );
+    }
+
+    private function save( City $city, Request $request ){
+        $city->name = $request->name;
+        $city->state = $request->state;
+        $city->postcode = $request->postcode;
+        $city->save();
+    }
+
+    private function formValidator( Request $request ){
+        return Validator::make( $request->all(), [
+            'name' => 'required',
+            'state' => 'required',
+            'postcode' => 'required'
+        ]);
     }
 }

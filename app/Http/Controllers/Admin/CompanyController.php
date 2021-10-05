@@ -42,10 +42,8 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make( $request->all(), [
-            'name' => 'required',
-            'description' => 'required'
-        ]);
+        // Validate the request
+        $validator = $this->formValidator( $request );
 
         if( $validator->fails() ){
             return redirect()->route( 'companies.create' )
@@ -54,10 +52,9 @@ class CompanyController extends Controller
                         ->with( 'danger', 'Company could not be created.' );
         }
 
+        // Save the company
         $company = new Company;
-        $company->name = $request->name;
-        $company->description = $request->description;
-        $company->save();
+        $this->save( $company, $request );
 
         return redirect()->route( 'companies.index' )->with( 'success', 'New company created.' );
     }
@@ -98,10 +95,8 @@ class CompanyController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validator = Validator::make( $request->all(), [
-            'name' => 'required',
-            'description' => 'required'
-        ]);
+        // Validate the request
+        $validator = $this->formValidator( $request );
 
         if( $validator->fails() ){
             return redirect()->route( 'companies.edit', $id )
@@ -110,10 +105,9 @@ class CompanyController extends Controller
                             ->with( 'danger', 'Company could not be updated.' );
         }
 
+        // Find and save the company
         $company = Company::findOrFail( $id );
-        $company->name = $request->input('name');
-        $company->description = $request->input('description');
-        $company->save();
+        $this->save( $company, $request );
 
         return redirect()->route( 'companies.show', [
             'company' => $company
@@ -137,5 +131,18 @@ class CompanyController extends Controller
         Job::where( 'company_id', $id )->update( [ 'company_id' => null ] );
 
         return redirect()->route( 'companies.index' )->with( 'info', 'Company deleted.' );
+    }
+
+    private function formValidator(  Request $request ){
+        return Validator::make( $request->all(), [
+            'name' => 'required',
+            'description' => 'required'
+        ]);
+    }
+
+    private function save( Company $company, Request $request ){
+        $company->name = $request->name;
+        $company->description = $request->description;
+        $company->save();
     }
 }

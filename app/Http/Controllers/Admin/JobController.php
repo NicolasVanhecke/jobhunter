@@ -46,15 +46,8 @@ class JobController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make( $request->all(), [
-            'title' => 'required',
-            'company_id' => 'required',
-            'city_id' => 'required',
-            'intro' => 'required',
-            'description' => 'required',
-            'contact' => 'required|email',
-            'type' => 'required'
-        ]);
+        // Validate the form
+        $validator = $this->formValidator( $request );
 
         if( $validator->fails() ){
             return redirect()->route( 'admin/jobs/create' )
@@ -63,16 +56,9 @@ class JobController extends Controller
                         ->with( 'danger', 'Job could not be created.' );
         }
 
-        // Job::create( $request );
+        // Create the job
         $job = new Job;
-        $job->title = $request->title;
-        $job->company_id = $request->company_id;
-        $job->city_id = $request->city_id;
-        $job->intro = $request->intro;
-        $job->description = $request->description;
-        $job->contact = $request->contact;
-        $job->type = $request->type;
-        $job->save();
+        $this->save( $job, $request );
 
         return redirect()->route( 'jobs.index' )->with( 'success', 'New job created.' );
     }
@@ -114,15 +100,8 @@ class JobController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validator = Validator::make( $request->all(), [
-            'title' => 'required',
-            'company_id' => 'required',
-            'city_id' => 'required',
-            'intro' => 'required',
-            'description' => 'required',
-            'contact' => 'required|email',
-            'type' => 'required'
-        ]);
+        // Validate the form
+        $validator = $this->formValidator( $request );
 
         if( $validator->fails() ){
             return redirect()->route( 'jobs.edit', [
@@ -135,15 +114,9 @@ class JobController extends Controller
                             ->with( 'danger', 'Job could not be updated.' );
         }
 
+        // Find the job and update
         $job = Job::findOrFail( $id );
-        $job->title = $request->input('title');
-        $job->company_id = $request->input('company_id');
-        $job->city_id = $request->input('city_id');
-        $job->intro = $request->input('intro');
-        $job->description = $request->input('description');
-        $job->contact = $request->input('contact');
-        $job->type = $request->input('type');
-        $job->save();
+        $this->save( $job, $request );
 
         return redirect()->route( 'jobs.show', [
             'job' => $job
@@ -163,5 +136,40 @@ class JobController extends Controller
         $job->save();
 
         return redirect()->route( 'jobs.index' )->with( 'info', 'Job deleted.' );
+    }
+
+    /**
+     * Validate form request.
+     *
+     * @param  Request  $request
+     * @return object
+     */
+    private function formValidator( $request ){
+        return Validator::make( $request->all(), [
+            'title' => 'required',
+            'company_id' => 'required',
+            'city_id' => 'required',
+            'intro' => 'required',
+            'description' => 'required',
+            'contact' => 'required|email',
+            'type' => 'required'
+        ]);
+    }
+
+    /**
+     * Saves the job for create and update.
+     *
+     * @param  Job  $job
+     * @param  Request  $request
+     */
+    private function save( Job $job, Request $request ){
+        $job->title = $request->input('title');
+        $job->company_id = $request->input('company_id');
+        $job->city_id = $request->input('city_id');
+        $job->intro = $request->input('intro');
+        $job->description = $request->input('description');
+        $job->contact = $request->input('contact');
+        $job->type = $request->input('type');
+        $job->save();
     }
 }
